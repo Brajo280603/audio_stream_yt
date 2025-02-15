@@ -4,20 +4,19 @@ import crypto from 'crypto';
 const app = express();
 const PORT = 3000;
 
-import {DOMParser , parseHTML, toJSON} from 'linkedom'
 
 import {Readable} from 'stream'
 
 // Endpoint to stream audio from YouTube
-app.get('/audio', async (req, res) => {
+app.get('/audioStream', async (req, res) => {
   const videoUrl = req.query.url; // YouTube video URL passed as a query parameter
 
   if (!videoUrl) {
-    return res.status(400).send('Please provide a YouTube video URL.');
+    return res.status(400).send('Please provide a valid URL.');
   }
 
   try {
-    let output= await fetch('https://aac.saavncdn.com/113/e45f070840651198253b3170b556d802_12.mp4')
+    let output= await fetch(videoUrl)
 
     output = output.body    
     if (output) {
@@ -26,6 +25,8 @@ app.get('/audio', async (req, res) => {
         console.log(output)
         
         output = Readable.fromWeb(output)
+
+
         output.pipe(res)
         
     } else {
@@ -37,12 +38,40 @@ app.get('/audio', async (req, res) => {
   }
 });
 
-app.get('/',async (req,res)=>{
-    let output = await fetch('https://www.jiosaavn.com/featured/english-india-superhits-top-50/aXoCADwITrUCObrEMJSxEw__')
+app.get('/songDetails',async(req,res)=>{
+    const id = req.query.id;
+    
 
-    output = await output.text();
-    console.log(output)
-    res.send(output)
+    console.log(JSON.stringify(req.query))
+
+    let res_text = await fetch(`https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids=${id}`)
+
+    res_text = await res_text.json()
+
+    res_text = res_text[id]
+
+    
+
+
+
+    res.send(res_text)
+})
+
+app.get('/search',async(req,res)=>{
+  const query = req.query.q; 
+
+  let res_text = await fetch(`https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query=${query}`)
+
+  res_text = await res_text.json()
+  res.send(res_text)
+})
+
+app.get('/albumDetails',async(req,res)=>{
+
+})
+
+app.get('/playlistDetails',async(req,res)=>{
+
 })
 
 app.listen(PORT, () => {
@@ -51,7 +80,7 @@ app.listen(PORT, () => {
 
 
 
-function decryptUrl(url,quality) {
+function decryptUrl(url,quality='Good') {
     const key = Buffer.from('38346591', 'utf-8');
     const iv = Buffer.alloc(8, 0); // Equivalent to b"\0\0\0\0\0\0\0\0"
     const decipher = crypto.createDecipheriv('DES-ECB', key, iv);
