@@ -52,6 +52,15 @@ app.get('/audio', async (req, res) => {
   }
 });
 
+
+app.get("/",async (req,res)=>{
+  let output = await fetch("https://charts.youtube.com/charts/TopVideos/global/daily");
+
+  output = await output.text();
+  console.log(output)
+
+  res.send(output);
+})
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
