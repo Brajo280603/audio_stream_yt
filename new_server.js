@@ -1,5 +1,5 @@
 const express = require('express');
-const ytdl = require('ytdl-core');
+const ytdl = require('@distube/ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
 const { PassThrough } = require('stream');
 
@@ -7,7 +7,7 @@ const app = express();
 
 app.get('/audio', async (req, res) => {
   const videoUrl = req.query.url; // YouTube video URL passed as a query parameter
-
+  console.log(videoUrl)
   if (!videoUrl) {
     return res.status(400).send('Please provide a YouTube video URL.');
   }
@@ -15,14 +15,14 @@ app.get('/audio', async (req, res) => {
   try {
     const info = await ytdl.getInfo(videoUrl);
     const format = ytdl.chooseFormat(info.formats, { quality: 'lowestaudio' });
-
+    // console.log(info)
     if (format) {
       const audioStream = ytdl(videoUrl, { format });
       const convertedStream = new PassThrough();
 
       ffmpeg(audioStream)
-        .audioFrequency(8000) // Low sample rate
-        .audioBitrate(16) // Low bitrate
+        .audioFrequency(48000) // Low sample rate (lowest = 8000)
+        .audioBitrate(64) // Low bitrate (lowest = 16)
         .audioChannels(2) // Stereo audio
         .format('webm') // Output format
         .on('start', (commandLine) => {
